@@ -1,386 +1,179 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Advanced Live Gold Dashboard (XAU/USD)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gold Live + Signal Dashboard</title>
   <style>
-    body { font-family: Inter, system-ui, Arial; margin:0; padding:16px; background:#f5f7fb; color:#111 }
-    .container{max-width:1200px;margin:0 auto}
-    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .card{background:#fff;border-radius:10px;padding:14px;box-shadow:0 6px 18px rgba(12,18,34,0.06);margin-bottom:12px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .col{flex:1;min-width:280px}
-    .badge{display:inline-block;padding:6px 10px;border-radius:8px;font-size:13px}
-    .green{background:#eef9f1;color:#0a6b2c}
-    .red{background:#fff0f0;color:#8b1d1d}
-    .yellow{background:#fffbe6;color:#7a5a02}
-    .muted{color:#666;font-size:13px}
-    button{padding:8px 12px;border-radius:8px;border:0;background:#0b66ff;color:#fff;cursor:pointer}
-    .small{font-size:13px}
-    pre{white-space:pre-wrap;word-break:break-word}
-    a { color: #0b66ff }
+    body { font-family: Arial, sans-serif; margin:0; padding:16px; background:#f4f6f8; color:#222; }
+    .container { max-width: 1000px; margin: auto; }
+    header { text-align: center; margin-bottom: 24px; }
+    header h1 { margin: 0; }
+    .row { display: flex; flex-wrap: wrap; gap:16px; }
+    .card { background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding:16px; flex:1; min-width: 280px; }
+    .small { font-size: 0.9em; color: #555; }
+    #price { font-size: 2.4em; font-weight: bold; }
+    .badge { display: inline-block; padding:6px 10px; border-radius: 6px; font-size: 1em; }
+    .green { background: #e6ffed; color: #007a33; }
+    .red { background: #ffe6e6; color: #a33; }
+    .yellow { background: #fff9e6; color: #7a5a02; }
+    iframe { border: none; width: 100%; }
+    button { padding: 8px 12px; border:none; border-radius:6px; background:#007bff; color:#fff; cursor: pointer; }
+    button:hover { background:#0056b3; }
+    ul { list-style: none; padding:0; }
+    li { margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    a { color: #007bff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <div>
-        <h1 style="margin:0">Advanced Live Gold Dashboard — XAU/USD</h1>
-        <div class="muted small">Combines technical indicators + news sentiment → probability-style outlook (not guaranteed)</div>
+      <h1>📊 Gold (XAU/USD) Live Dashboard & Signal</h1>
+      <p class="small">Live price, news, calendar & trading signal</p>
+    </header>
+
+    <div class="row">
+      <div class="card">
+        <div>Live Price</div>
+        <div id="price">$ —</div>
+        <div id="last-update" class="small">Loading...</div>
+        <hr />
+        <div>
+          <span id="signalBadge" class="badge yellow">Signal: —</span>
+          &nbsp;
+          <span id="confidence" class="small">Confidence: —</span>
+        </div>
       </div>
-      <div>
-        <button id="startBtn">Start Live</button>
-        <button id="stopBtn" style="display:none">Stop</button>
+
+      <div class="card">
+        <div>News Feed</div>
+        <div id="newsList" style="max-height:220px; overflow-y:auto; margin-top:8px;">
+          <div class="small">Loading news...</div>
+        </div>
+        <div style="margin-top:8px;">
+          <button id="refreshNews">Refresh News</button>
+          <div class="small">Powered by Kitco + World Gold Council RSS</div>
+        </div>
       </div>
-    </header><div class="row">
-  <div class="col card">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div class="muted small">Live Price</div>
-        <div style="font-size:28px;font-weight:700" id="price">$ —</div>
-        <div class="muted small" id="last-update"></div>
-      </div>
-      <div style="text-align:right">
-        <div id="signalBadge" class="badge yellow">Signal: —</div>
-        <div class="muted small" id="confidence">Confidence: —</div>
+
+      <div class="card">
+        <div>Economic Calendar</div>
+        <div style="height:260px; margin-top:8px;">
+          <iframe src="https://ssltools.investing.com/widget/economicCalendar?theme=light"></iframe>
+        </div>
       </div>
     </div>
 
-    <hr style="margin:12px 0">
-
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
-      <div style="min-width:180px">
-        <div class="muted small">SMA Short (5)</div>
-        <div id="smaShort" style="font-weight:700">—</div>
-      </div>
-      <div style="min-width:180px">
-        <div class="muted small">SMA Long (20)</div>
-        <div id="smaLong" style="font-weight:700">—</div>
-      </div>
-      <div style="min-width:160px">
-        <div class="muted small">RSI (14)</div>
-        <div id="rsi" style="font-weight:700">—</div>
-      </div>
-      <div style="min-width:160px">
-        <div class="muted small">MACD (approx)</div>
-        <div id="macd" style="font-weight:700">—</div>
+    <div style="margin-top:24px;" class="card">
+      <h3>TradingView Chart</h3>
+      <div style="height:400px; margin-top:8px;">
+        <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tvembed&symbol=OANDA%3AXAUUSD&interval=60&hidesidetoolbar=1&theme=light"></iframe>
       </div>
     </div>
 
-    <div style="margin-top:12px" class="muted small">Price history (cached in browser for indicators): <span id="historyCount">0</span> samples</div>
+    <footer style="margin-top:24px; text-align:center;" class="small">
+      Disclaimer: Signals are probabilistic. Use proper risk management. Not financial advice.
+    </footer>
   </div>
 
-  <div class="col card">
-    <div class="muted small">News Sentiment (latest headlines)</div>
-    <div id="newsList" style="max-height:240px;overflow:auto;margin-top:8px"></div>
-    <div style="margin-top:8px">
-      <button id="refreshNews">Refresh News</button>
-      <div class="muted small" style="margin-top:8px">News sources: Kitco + World Gold Council RSS (polarity scoring).</div>
-    </div>
-  </div>
+  <script>
+    let priceHistory = [];
+    const maxHistory = 300;
+    const posWords = ["rise","surge","gain","soar","bull","record","rally","strong","inflow"];
+    const negWords = ["fall","drop","decline","weak","sell","outflow","crash","tumble","down"];
 
-  <div class="col card">
-    <div class="muted small">Economic Calendar</div>
-    <div style="height:280px;margin-top:8px">
-      <!-- Investing.com calendar iframe (visual) -->
-      <iframe src="https://ssltools.investing.com/widget/economicCalendar?theme=light" style="width:100%;height:100%;border:0"></iframe>
-    </div>
-  </div>
-</div>
+    function formatUSD(x) { return '$ ' + Number(x).toLocaleString('en-US', { maximumFractionDigits: 2 }); }
+    function pushSample(p) { priceHistory.push(p); if(priceHistory.length>maxHistory) priceHistory.shift(); }
+    function sma(n){ if(priceHistory.length<n) return null; const arr=priceHistory.slice(-n); return arr.reduce((a,b)=>a+b,0)/n; }
+    function rsiCalc(n=14){ if(priceHistory.length<n+1) return null; let gains=0,losses=0; const arr=priceHistory; for(let i=arr.length-n;i<arr.length;i++){ const diff=arr[i]-arr[i-1]; if(diff>0) gains+=diff; else losses+=-diff;} if(gains+losses===0)return 50; const rs=(gains/n)/(losses/n||1e-9); return 100-(100/(1+rs)); }
 
-<div class="row">
-  <div class="col card">
-    <h3 style="margin-top:0">TradingView Chart</h3>
-    <div style="height:420px">
-      <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tvembed&symbol=OANDA%3AXAUUSD&interval=60&hidesidetoolbar=1&theme=light" style="width:100%;height:100%;border:0"></iframe>
-    </div>
-  </div>
-
-  <div class="col card">
-    <h3 style="margin-top:0">How outlook is computed</h3>
-    <div class="muted small">
-      <ul>
-        <li>SMA crossover: short &gt; long → bullish; short &lt; long → bearish.</li>
-        <li>RSI: &gt;70 overbought (bearish), &lt;30 oversold (bullish).</li>
-        <li>MACD sign agrees with SMA → increases confidence.</li>
-        <li>News sentiment: positive headlines add bullish weight, negative add bearish weight.</li>
-        <li>Combined -&gt; signal + confidence (0-100%).</li>
-      </ul>
-    </div>
-
-    <hr>
-    <div class="muted small">Quick controls</div>
-    <div style="margin-top:8px">
-      <label class="small">Polling interval (sec): <input id="intervalInput" type="number" value="15" style="width:60px" /></label>
-      <div style="margin-top:8px">
-        <label class="small">API endpoint (change if needed):</label>
-        <pre id="endpoint" style="background:#f1f4f8;padding:8px;border-radius:8px">https://api.gold-api.com/price?symbol=XAU</pre>
-        <div class="muted small">If endpoint fails, open console. You can replace with Metals-API / GoldAPI endpoints you prefer.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<footer style="margin-top:12px" class="muted small card">
-  <strong>Disclaimer:</strong> This tool provides signals and probabilities only for educational/testing. Not financial advice. Always test on demo before trading real money.
-</footer>
-
-  </div><script>
-/*
-  Advanced Live Gold Dashboard (client-side)
-  - This is a client-side implementation intended for testing/demo.
-  - The code attempts a default free endpoint path: https://api.gold-api.com/price?symbol=XAU
-  - If that endpoint is different/blocked you can replace the 'endpointBase' variable below with your preferred API.
-  - The dashboard stores recent price samples in 'priceHistory' and computes SMA(5), SMA(20), RSI(14), MACD approx.
-  - News sentiment uses rss2json proxy for Kitco + World Gold Council RSS feeds (public demo). If rate-limited, replace with your own RSS->JSON proxy.
-*/
-
-let polling = false;
-let poller = null;
-let priceHistory = []; // {ts, price}
-const maxHistory = 300; // keep last ~300 samples (adjust)
-const endpointBaseEl = document.getElementById('endpoint');
-
-let endpointBase = endpointBaseEl.textContent.trim(); // default shown in UI
-
-// Basic sentiment lexicon (very small) — expand for better accuracy
-const posWords = ["rise","surge","gain","soar","bull","record","rally","inflow","strong"];
-const negWords = ["fall","drop","decline","sell","weak","outflow","crash","tumble","down"];
-
-function formatMoney(v){ return '$ ' + Number(v).toLocaleString('en-US', {maximumFractionDigits:2}) }
-
-async function fetchPriceTry() {
-  // try several common paths to maximize chances
-  const tries = [
-    endpointBase, // default text shown in UI
-    'https://api.gold-api.com/price?symbol=XAU', // gold-api common-ish
-    'https://api.gold-api.com/latest?base=USD&symbols=XAU',
-    'https://metals-api.com/api/latest?access_key=demo&base=USD&symbols=XAU', // demo attempt (will fail without key)
-    'https://metalpriceapi.com/api/v1/latest?base=USD&symbols=XAU',
-    'https://api.metals.dev/latest?base=USD&symbols=XAU'
-  ];
-  for (let u of tries) {
-    try {
-      if (!u) continue;
-      const res = await fetch(u, { cache: "no-store" });
-      if (!res.ok) continue;
-      const js = await res.json();
-      // Attempt to parse common shapes:
-      // shape1: { price: 4243.3 } or { price: { XAU: ... } }
-      if (js.price && typeof js.price === 'number') return {price: js.price, raw: js};
-      if (js.price && js.price.XAU) return {price: js.price.XAU, raw: js};
-      // metals-api shape: { rates: { XAU: 0.00023 } } XAU per USD maybe inverse
-      if (js.rates && (js.rates.XAU || js.rates['XAU'])) {
-        let v = js.rates.XAU || js.rates['XAU'];
-        v = Number(v);
-        if (v <= 1) v = 1 / v; // invert if necessary
-        return {price: v, raw: js}
-      }
-      // gold-api shape might be { symbol: "XAU", price: 4243.3 }
-      if (js.symbol && (js.price || js.last)) {
-        return {price: js.price || js.last, raw: js};
-      }
-      // gold-api 'latest' style: { XAU: { price: ... } }
-      if (js.XAU && js.XAU.price) return {price: js.XAU.price, raw: js};
-      // api-ninjas style: { price: 4243.3 }
-      if (js.price) return {price: js.price, raw: js};
-    } catch (e) {
-      // skip to next try
-      // console.warn('fetch try failed', u, e);
+    function computeSignal(newsScore){
+      const s5=sma(5),s20=sma(20),rsi=rsiCalc(14);
+      let score=0;
+      if(s5!=null&&s20!=null){ score += s5>s20?30:-30;}
+      if(rsi!=null){ score += rsi<30?20:rsi>70?-20:0;}
+      score+=newsScore*10;
+      score=Math.max(-100,Math.min(100,score));
+      const conf=Math.round(Math.abs(score));
+      let sig='Neutral';
+      if(score>20)sig='Long';
+      else if(score<-20)sig='Short';
+      return {sig,conf};
     }
-  }
-  throw new Error('All price endpoints failed. Replace the endpoint in UI with a working gold price API (gold-api.com or Metals-API).');
-}
 
-function pushPriceSample(p) {
-  const ts = Date.now();
-  priceHistory.push({ts, price: Number(p)});
-  if (priceHistory.length > maxHistory) priceHistory.shift();
-  document.getElementById('historyCount').textContent = priceHistory.length;
-}
-
-function sma(period) {
-  if (priceHistory.length < period) return null;
-  const slice = priceHistory.slice(-period);
-  const sum = slice.reduce((s,x)=>s + x.price, 0);
-  return sum / period;
-}
-
-function rsi(period = 14) {
-  if (priceHistory.length < period + 1) return null;
-  let gains=0, losses=0;
-  for (let i = priceHistory.length - period; i < priceHistory.length; i++) {
-    const change = priceHistory[i].price - priceHistory[i-1].price;
-    if (change > 0) gains += change; else losses -= change;
-  }
-  if (gains + losses === 0) return 50;
-  const rs = (gains / period) / (losses / period || 1e-9);
-  const rsi = 100 - (100/(1+rs));
-  return rsi;
-}
-
-function macdApprox() {
-  // quick MACD-like: EMA12 - EMA26 approximated with simple EMA
-  const prices = priceHistory.map(p=>p.price);
-  if (prices.length < 26) return null;
-  function ema(arr, span) {
-    const k = 2/(span+1);
-    let ema = arr[0];
-    for (let i=1;i<arr.length;i++){ ema = arr[i]*k + ema*(1-k); }
-    return ema;
-  }
-  const ema12 = ema(prices.slice(-26), 12);
-  const ema26 = ema(prices.slice(-26), 26);
-  return ema12 - ema26;
-}
-
-async function fetchNews() {
-  // Using rss2json free proxy for demo (may be rate-limited). Replace if needed.
-  const feeds = [
-    'https://www.kitco.com/news/atom.xml',
-    'https://www.gold.org/rss/pg_news.xml'
-  ];
-  const items = [];
-  for (let f of feeds) {
-    try {
-      const proxy = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f);
-      const r = await fetch(proxy);
-      if (!r.ok) continue;
-      const j = await r.json();
-      if (j.items && j.items.length) {
-        j.items.slice(0,8).forEach(it => items.push({title: it.title, link: it.link, pubDate: it.pubDate, description: it.description}));
+    async function fetchPrice(){
+      const endpoints=[
+        'https://www.goldapi.io/api/XAU/USD', // free API (requires demo key)
+        'https://metalpriceapi.com/api/v1/latest?base=USD&symbols=XAU',
+        'https://metals-api.com/api/latest?access_key=DEMO_KEY&base=USD&symbols=XAU'
+      ];
+      for(let url of endpoints){
+        try{
+          const resp=await fetch(url);
+          if(!resp.ok) continue;
+          const js=await resp.json();
+          if(js.price && typeof js.price==='number') return js.price;
+          if(js.data && js.data.rate) return js.data.rate;
+          if(js.rates && js.rates.XAU){ let v=Number(js.rates.XAU); if(v<=1)v=1/v; return v;}
+          if(js.XAU && js.XAU.price) return js.XAU.price;
+        }catch(err){ console.warn('Price fetch failed for',url,err);}
       }
-    } catch(e){}
-  }
-  // sort by pubDate
-  items.sort((a,b)=> new Date(b.pubDate) - new Date(a.pubDate));
-  return items.slice(0,15);
-}
+      throw new Error("All price endpoints failed");
+    }
 
-function scoreSentiment(text) {
-  if (!text) return 0;
-  const tx = text.toLowerCase();
-  let s=0;
-  posWords.forEach(w=>{ if (tx.includes(w)) s+=1; });
-  negWords.forEach(w=>{ if (tx.includes(w)) s-=1; });
-  return s; // positive -> bullish, negative -> bearish
-}
+    async function fetchNewsAndSentiment(){
+      const newsDiv=document.getElementById('newsList');
+      newsDiv.innerHTML='<div class="small">Loading news...</div>';
+      let items=[];
+      const feeds=['https://www.kitco.com/news/atom.xml','https://www.gold.org/rss/pg_news.xml'];
+      for(let f of feeds){
+        try{
+          const proxy='https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(f);
+          const res=await fetch(proxy);
+          if(!res.ok) continue;
+          const js=await res.json();
+          if(js.items) items=items.concat(js.items.slice(0,5));
+        }catch(e){}
+      }
+      if(items.length===0){ newsDiv.innerHTML='<div class="small">No news available.</div>'; return 0;}
+      items.sort((a,b)=> new Date(b.pubDate)-new Date(a.pubDate));
+      let totalScore=0;
+      newsDiv.innerHTML='';
+      items.forEach(item=>{
+        const txt=(item.title+' '+(item.description||'')).toLowerCase();
+        let score=0; posWords.forEach(w=>{if(txt.includes(w))score+=1;}); negWords.forEach(w=>{if(txt.includes(w))score-=1;});
+        totalScore+=score;
+        const li=document.createElement('li');
+        li.innerHTML=`<a href="${item.link}" target="_blank">${item.title}</a>
+          <div class="small">${new Date(item.pubDate).toLocaleString()}</div>
+          <div class="small">Sentiment: ${score}</div>`;
+        newsDiv.appendChild(li);
+      });
+      return totalScore;
+    }
 
-function computeCombinedSignal() {
-  const smaS = sma(5), smaL = sma(20);
-  const r = rsi(14);
-  const m = macdApprox();
-  const newsScore = window.latestNewsScore || 0;
+    async function refreshAll(){
+      try{
+        const p=await fetchPrice();
+        document.getElementById('price').innerText=formatUSD(p);
+        document.getElementById('last-update').innerText='Updated: '+new Date().toLocaleTimeString();
+        pushSample(p);
+        const newsScore=await fetchNewsAndSentiment();
+        const {sig,conf}=computeSignal(newsScore);
+        const badge=document.getElementById('signalBadge');
+        badge.innerText='Signal: '+sig;
+        badge.className='badge '+(sig==='Long'?'green':sig==='Short'?'red':'yellow');
+        document.getElementById('confidence').innerText='Confidence: '+conf+'%';
+      }catch(err){
+        console.error('Refresh error',err);
+        document.getElementById('last-update').innerText='Error fetching data';
+      }
+    }
 
-  let score = 0;
-  // SMA weight
-  if (smaS && smaL) {
-    if (smaS > smaL) score += 30; else score -= 30;
-  }
-  // RSI weight
-  if (r) {
-    if (r < 30) score += 20;
-    else if (r > 70) score -= 20;
-  }
-  // MACD
-  if (m) { score += (m > 0 ? 20 : -20) * Math.min(1, Math.abs(m)/10); }
-  // News
-  score += (newsScore * 10); // newsScore typically small
-
-  // normalize to -100..100
-  let conf = Math.max(-100, Math.min(100, score));
-  // convert to 0..100 confidence magnitude
-  const confidence = Math.round(Math.abs(conf));
-  let signal = 'Neutral';
-  if (conf > 20) signal = 'Bullish';
-  else if (conf < -20) signal = 'Bearish';
-  return { signal, confidence };
-}
-
-async function refreshAllOnce() {
-  try {
-    const p = await fetchPriceTry();
-    const price = Number(p.price);
-    const now = new Date();
-    document.getElementById('price').textContent = formatMoney(price);
-    document.getElementById('last-update').textContent = 'Updated: ' + now.toLocaleTimeString();
-    pushPriceSample(price);
-
-    // compute indicators
-    const s5 = sma(5); const s20 = sma(20);
-    document.getElementById('smaShort').textContent = s5 ? formatMoney(s5) : '—';
-    document.getElementById('smaLong').textContent = s20 ? formatMoney(s20) : '—';
-    document.getElementById('rsi').textContent = rsi(14) ? Math.round(rsi(14)) : '—';
-    document.getElementById('macd').textContent = macdApprox() ? macdApprox().toFixed(4) : '—';
-
-    // compute combined signal
-    const comb = computeCombinedSignal();
-    const badge = document.getElementById('signalBadge');
-    badge.textContent = 'Signal: ' + comb.signal;
-    badge.className = 'badge ' + (comb.signal === 'Bullish' ? 'green' : comb.signal === 'Bearish' ? 'red' : 'yellow');
-    document.getElementById('confidence').textContent = 'Confidence: ' + comb.confidence + '%';
-  } catch (err) {
-    console.error('Refresh failed:', err);
-    document.getElementById('last-update').textContent = 'Price fetch failed: ' + (err.message || err);
-  }
-}
-
-async function refreshNewsAndSentiment() {
-  const newsDiv = document.getElementById('newsList');
-  newsDiv.innerHTML = '<div class="muted small">Loading news…</div>';
-  const items = await fetchNews();
-  window.latestNewsScore = 0;
-  newsDiv.innerHTML = '';
-  if (!items || items.length===0) { newsDiv.innerHTML = '<div class="muted small">No news (proxy may be rate-limited).</div>'; return; }
-  for (let it of items) {
-    const s = scoreSentiment(it.title + ' ' + (it.description||''));
-    window.latestNewsScore += s;
-    const d = document.createElement('div');
-    d.style.padding='8px';
-    d.style.borderBottom='1px solid #eee';
-    d.innerHTML = `<div style="font-weight:600">${it.title}</div><div class="muted small">${new Date(it.pubDate).toLocaleString()}</div><div class="small" style="margin-top:6px">${it.description ? it.description.replace(/(<([^>]+)>)/ig,"") .slice(0,140) : ''}</div><div class="muted small">sentiment: ${s}</div>`;
-    newsDiv.appendChild(d);
-  }
-  // after news updated, recompute signal to factor in news
-  const comb = computeCombinedSignal();
-  const badge = document.getElementById('signalBadge');
-  badge.textContent = 'Signal: ' + comb.signal;
-  badge.className = 'badge ' + (comb.signal === 'Bullish' ? 'green' : comb.signal === 'Bearish' ? 'red' : 'yellow');
-  document.getElementById('confidence').textContent = 'Confidence: ' + comb.confidence + '%';
-}
-
-document.getElementById('refreshNews').addEventListener('click', refreshNewsAndSentiment);
-
-document.getElementById('startBtn').addEventListener('click', () => {
-  const interval = Math.max(5, Number(document.getElementById('intervalInput').value) || 15);
-  // update endpoint from UI editable <pre>
-  endpointBase = document.getElementById('endpoint').textContent.trim();
-  polling = true;
-  document.getElementById('startBtn').style.display='none';
-  document.getElementById('stopBtn').style.display='inline-block';
-  // initial refresh
-  refreshAllOnce();
-  refreshNewsAndSentiment();
-  poller = setInterval(refreshAllOnce, interval*1000);
-  setInterval(refreshNewsAndSentiment, 60*1000); // news every 60s
-});
-
-document.getElementById('stopBtn').addEventListener('click', () => {
-  polling = false;
-  if (poller) clearInterval(poller);
-  document.getElementById('startBtn').style.display='inline-block';
-  document.getElementById('stopBtn').style.display='none';
-});
-
-// On load attempt one fetch (no polling)
-(async ()=>{
-  try {
-    // just attempt to warm-up UI with available price
-    await refreshAllOnce();
-    await refreshNewsAndSentiment();
-  } catch(e){}
-})();
-</script></body>
+    document.getElementById('refreshNews').addEventListener('click',()=>{ fetchNewsAndSentiment(); });
+    setInterval(refreshAll,60*1000);
+    refreshAll();
+  </script>
+</body>
 </html>
